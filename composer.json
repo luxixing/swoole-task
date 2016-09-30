@@ -16,7 +16,7 @@
     "minimum-stability": "stable",
     "autoload": {
 	"psr-4": {
-	    "ping/swoole-task": "src"
+	    "ping/swoole-task\\": "src"
 	}
     }
 }
