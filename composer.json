@@ -1,5 +1,5 @@
 {
-    "name": "fxp/swoole-task",
+    "name": "ping/swoole-task",
     "description": "基于swoole扩展的异步并发任务处理服务框架",
     "type": "library",
     "require": {
@@ -16,7 +16,7 @@
     "minimum-stability": "stable",
     "autoload": {
 	"psr-4": {
-	    "fxp/swoole-task": "src"
+	    "ping/swoole-task": "src"
 	}
     }
 }
