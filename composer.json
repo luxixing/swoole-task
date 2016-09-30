@@ -18,7 +18,7 @@
     ],
     "minimum-stability": "stable",
     "bin": [
-        "bin/swoole-task"
+        "bin/swoole-task.php"
     ],
     "autoload": {
 	"psr-4": {
