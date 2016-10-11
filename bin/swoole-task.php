@@ -30,7 +30,7 @@ define('SW_SRC_ROOT', realpath(__DIR__ . DS . '..'));
 /**
  * @var string swoole-task 业务应用根目录:即 vendor_path的父目录
  */
-define("SW_APP_ROOT", realpath(SW_SRC_ROOT . DS . '..' . DS . '..'));
+define("SW_APP_ROOT", realpath(SW_SRC_ROOT . DS . '..' . DS . '..'  . DS . '..'));
 
 define('SW_APP_CONF', 'Conf');//swoole-task业务配置目录,不允许修改
 define('SW_APP_RUNTIME', 'Runtime');//swoole-task业务数据访问目录，不允许修改
