@@ -18,11 +18,11 @@
     ],
     "minimum-stability": "stable",
     "bin": [
-        "bin/swoole-task.php"
+        "bin/swoole-task"
     ],
     "autoload": {
 	"psr-4": {
-	    "ping/swoole-task\\": "src"
+	    "Ping/SwooleTask\\": "src"
 	}
     }
 }

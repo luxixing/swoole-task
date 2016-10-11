@@ -2,20 +2,22 @@
 /**
  *  基于swoole扩展的http-server封装的一个接受异步任务请求的http服务器
  */
-namespace ping\swooleTask;
+namespace Ping\SwooleTask;
+
+use Ping\SwooleTask\Base\App as BaseApp;
 
 class HttpServer
 {
     /**
      * swoole http-server 实例
      *
-     * @var null|swoole_http_server
+     * @var null | swoole_http_server
      */
     private $server = null;
     /**
      * 应用实例
      *
-     * @var null|base\App
+     * @var null | BaseApp
      */
     private $app = null;
     /**
@@ -25,117 +27,52 @@ class HttpServer
      */
     private $setting = [];
 
-
     /**
-     * 加载框架[base/*.php]
+     * 加载框架[Base/*.php]
      */
     private function loadFramework()
     {
+        //TODO 未来可扩展内容继续完善
         //框架核心文件
         $coreFiles = [
-            'base' . DS . 'App.php',
-            'base' . DS . 'Ctrl.php',
-            'base' . DS . 'Dao.php',
-            'base' . DS . 'Helper.php',
+            'Base' . DS . 'App.php',
+            'Base' . DS . 'Ctrl.php',
+            'Base' . DS . 'Dao.php',
+            'Base' . DS . 'Helper.php',
         ];
         foreach ($coreFiles as $v) {
-            include SWOOLE_PATH . DS . $v;
+            include SW_SRC_ROOT . DS . 'src' . DS . $v;
         }
     }
 
     /**
-     * 设置swoole进程名称
+     * 修改swooleTask进程名称，如果是macOS 系统，则忽略(macOS不支持修改进程名称)
      *
-     * @param string $name swoole进程名称
+     * @param $name 进程名称
+     *
+     * @return bool
+     * @throws \Exception
      */
     private function setProcessName($name)
     {
+        if (PHP_OS == 'Darwin') {
+            return false;
+        }
         if (function_exists('cli_set_process_title')) {
             cli_set_process_title($name);
         } else {
             if (function_exists('swoole_set_process_name')) {
                 swoole_set_process_name($name);
             } else {
-                trigger_error(__METHOD__ . " failed. require cli_set_process_title or swoole_set_process_name.");
+                throw new \Exception(__METHOD__ . "failed,require cli_set_process_title|swoole_set_process_name");
             }
         }
     }
 
-    /**
-     * 捏造一个请求 swoole_http_request请求
-     *
-     * @param $data
-     *
-     * @return object
-     */
-    private function genFinishReq($data)
+    public function __construct($conf)
     {
-        if (empty($data['op'])) {
-            $data['op'] = 'test.finish';
-        }
-        $data['isFinish'] = true;
-        $req = new swoole_http_request();
-        $req->header = [
-            'host' => '',
-            'accept' => '',
-        ];
-        $req->server = [
-
-        ];
-        $req->fd = 0;
-        $req->get = [];
-        $req->post = $data;
-
-        return $req;
-    }
-
-
-    public function __construct($host = '0.0.0.0', $port = 9510)
-    {
-        defined('SWOOLE_PATH') || define('SWOOLE_PATH', __DIR__);
-        defined('DS') || define('DS', DIRECTORY_SEPARATOR);
-
-        $configPath = SWOOLE_PATH . DS . 'config';
-        $configFile = $configPath . DS . 'swoole.ini';
-        $tmpPath = SWOOLE_PATH . DS . 'tmp';
-        //首次启动初始化默认配置
-        if (!file_exists($configPath)) {
-            mkdir($configPath);
-            $setting = [
-                'host' => $host,    //监听ip
-                'port' => $port,    //监听端口
-                'env' => 'dev',    //环境 dev|test|prod
-                'process_name' => SWOOLE_TASK_NAME_PRE, //swoole 进程名称
-                'open_tcp_nodelay' => 1,    //关闭Nagle算法,提高HTTP服务器响应速度
-                'daemonize' => 0,    //是否守护进程 1=>守护进程| 0 => 非守护进程
-                'worker_num' => 4,    //worker进程 cpu 1-4倍
-                'task_worker_num' => 4,    //task进程
-                'task_max_request' => 10000,    //当task进程处理请求超过此值则关闭task进程
-                'root' => 'SWOOLE_PATH"/app"',  //open_basedir 安全措施
-                'tmp_dir' => 'SWOOLE_PATH"/tmp"',
-                'log_dir' => 'SWOOLE_PATH"/tmp/log"',
-                'task_tmpdir' => 'SWOOLE_PATH"/tmp/task"', //task进程临时数据目录
-                'log_file' => 'SWOOLE_PATH"/tmp/log/http.log"', //日志文件目录
-            ];
-            $iniSetting = '[http]' . PHP_EOL;
-            foreach ($setting as $k => $v) {
-                $iniSetting .= "{$k} = {$v}" . PHP_EOL;
-            }
-            file_put_contents($configFile, $iniSetting);
-        }
-        //首次启动创建临时目录
-        if (!file_exists($tmpPath)) {
-            mkdir($tmpPath, 0777);
-            mkdir($tmpPath . DS . 'log', 0777);
-            mkdir($tmpPath . DS . 'task', 0777);
-        }
-        //加载配置文件内容
-        if (!file_exists($configFile)) {
-            throw new ErrorException("swoole config file:{$configFile} not found");
-        }
-        //TODO 是否需要检查配置文件内容合法性
-        $ini = parse_ini_file($configFile, true);
-        $this->setting = $ini['http'];
+        //TODO conf配置检查
+        $this->setting = $conf;
     }
 
     public function getSetting()
@@ -143,26 +80,9 @@ class HttpServer
         return $this->setting;
     }
 
-    public function run($host = '', $port = '', $daemon = -1, $processName = '', $baseDir = '')
+    public function run()
     {
-        if ($host) {
-            $this->setting['host'] = $host;
-        }
-        if ($port) {
-            $this->setting['port'] = $port;
-        }
-        if ($daemon >= 0) {
-            $this->setting['daemonize'] = $daemon;
-        }
-        if ($processName) {
-            $this->setting['process_name'] = SWOOLE_TASK_NAME_PRE . '-' . $processName;
-        }
-        //设置 basedir
-        if ($baseDir && file_exists(SWOOLE_PATH . DS . $baseDir)) {
-            $this->setting['root'] = SWOOLE_PATH . DS . $baseDir;
-        }
-
-        $this->server = new swoole_http_server($this->setting['host'], $this->setting['port']);
+        $this->server = new \swoole_http_server($this->setting['host'], $this->setting['port']);
 
         $this->loadFramework();
         $this->server->set($this->setting);
@@ -186,7 +106,7 @@ class HttpServer
             }
         }
         //注入框架 常驻内存
-        $this->app = \base\App::getApp($this->server);
+        $this->app = BaseApp::getApp($this->server);
         $this->server->start();
     }
 
@@ -199,10 +119,10 @@ class HttpServer
     public function onStart($server)
     {
         echo 'Date:' . date('Y-m-d H:i:s') . "\t swoole_http_server master worker start\n";
-        $this->setProcessName($server->setting['process_name'] . '-master');
+        $this->setProcessName($server->setting['ps_name'] . '-master');
         //记录进程id,脚本实现自动重启
         $pid = "{$this->server->master_pid}\n{$this->server->manager_pid}";
-        file_put_contents(SWOOLE_TASK_PID_PATH, $pid);
+        file_put_contents($this->setting['pid_file'], $pid);
     }
 
     /**
@@ -213,7 +133,7 @@ class HttpServer
     public function onManagerStart($server)
     {
         echo 'Date:' . date('Y-m-d H:i:s') . "\t swoole_http_server manager worker start\n";
-        $this->setProcessName($server->setting['process_name'] . '-manager');
+        $this->setProcessName($server->setting['ps_name'] . '-manager');
     }
 
     /**
@@ -221,7 +141,7 @@ class HttpServer
      */
     public function onShutdown()
     {
-        unlink(SWOOLE_TASK_PID_PATH);
+        unlink($this->setting['pid_file']);
         echo 'Date:' . date('Y-m-d H:i:s') . "\t swoole_http_server shutdown\n";
     }
 
@@ -234,9 +154,9 @@ class HttpServer
     public function onWorkerStart($server, $workerId)
     {
         if ($workerId >= $this->setting['worker_num']) {
-            $this->setProcessName($server->setting['process_name'] . '-task');
+            $this->setProcessName($server->setting['ps_name'] . '-task');
         } else {
-            $this->setProcessName($server->setting['process_name'] . '-event');
+            $this->setProcessName($server->setting['ps_name'] . '-work');
         }
     }
 
@@ -248,7 +168,7 @@ class HttpServer
      */
     public function onWorkerStop($server, $workerId)
     {
-        echo 'Date:' . date('Y-m-d H:i:s') . "\t swoole_http_server[{$server->setting['process_name']}  worker:{$workerId} shutdown\n";
+        echo 'Date:' . date('Y-m-d H:i:s') . "\t swoole_http_server[{$server->setting['ps_name']}] worker:{$workerId} shutdown\n";
     }
 
 
@@ -264,7 +184,9 @@ class HttpServer
     {
         //获取swoole服务的当前状态
         if (isset($request->get['cmd']) && $request->get['cmd'] == 'status') {
-            $response->end(json_encode($this->server->stats()));
+            $res = $this->server->stats();
+            $res['start_time'] = date('Y-m-d H:i:s', $res['start_time']);
+            $response->end(json_encode($res));
 
             return true;
         }
@@ -310,20 +232,9 @@ class HttpServer
     public function onFinish($server, $taskId, $ret)
     {
         $fromId = $server->worker_id;
-        //任务结束，如果设置了任务完成回调函数,执行回调任务
-        if (!empty($ret['finish']) && !isset($ret['params']['isFinish'])) {
-            $data = $ret['data'];
-            //请求回调任务的op
-            $data['pre_op'] = $ret['op'];
-            $data['op'] = $ret['finish'];
-            //携带上一次请求执行的完整信息提供给回调函数
-            $req = $this->genFinishReq($data);
-            $this->server->task($req);
-        }
-        if (empty($ret['errno'])) {
+        if (!empty($ret['errno'])) {
             //任务成功运行不再提示
             //echo "\tTask[taskId:{$taskId}] success" . PHP_EOL;
-        } else {
             $error = PHP_EOL . var_export($ret, true);
             echo "\tTask[taskId:$fromId#{$taskId}] failed, Error[$error]" . PHP_EOL;
         }
