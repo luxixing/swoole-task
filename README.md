@@ -131,5 +131,22 @@ task_max_request 每个任务进程最多可处理请求数，超过重启，保
 
 如果存在，加载sw-app/Conf目录下的相关配置，启动服务。
 
+### 路由说明
+
+客户端和服务端http协议交互，形式如下
+
+curl "127.0.0.1:9523/ctrlName/actionName"
+
+curl "127.0.0.1:9523?op=ctrlName.actionName"
+
+初始化后，默认生成的TplCtrl.php 文件,其中包含了一个 helloAction的方法
+
+访问这个action的命令为
+
+curl "127.0.0.1:9523/tpl/hello"
+
+或者 
+
+curl "127.0.0.1:9523?op=tpl.hello"
 
 
