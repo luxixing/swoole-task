@@ -1,9 +1,11 @@
 swoole-task
 -----------
 swoole-task是基于PHP swoole扩展开发的一个异步多进程任务处理框架，服务端和客户端通过http协议进行交互。
-它适用于任务需要花费较长时间处理，而客户端不必关注任务执行结果的场景.比如数据清洗统计类的工作，报表生成类任务。
 
+它适用于任务需要花费较长时间处理，而客户端不必关注任务执行结果的场景.比如数据清洗统计类的工作，报表生成类任务。
+    
 ### 环境要求
+
 - PHP 5.4 以上版本,强烈推荐适用5.6，性能更好
 - Swoole 1.8.7 以上版本
 - PDO PDO_Mysql 
@@ -11,8 +13,11 @@ swoole-task是基于PHP swoole扩展开发的一个异步多进程任务处理�
 ### 安装方法
 
 鉴于目前composer已经成为PHP包管理事实的标准，swoole-task直接支持通过composer 命令安装使用。
+
 关于composer的使用请参考 composer 官网学习。
+
 假设当前我们项目的名称为play,需要在项目中集成swoole-task，服务，执行如下命令。
+
     
 ```sh
 composer require ping/swoole-task
@@ -21,9 +26,10 @@ composer require ping/swoole-task
 > 如果项目根目录中不存在composer.json文件，需要执行composer init 命令。
 
 ### 使用方法
-安装完成之后，在项目的vendor/bin 目录下会有swoole-tssk.php这个脚本，此脚本就是swoole-task服务的管理脚本.
 
-以默认配置启动swoole-task服务
+安装完成之后，在项目的vendor/bin 目录下会有swoole-tssk.php这个脚本，此脚本就是swoole-task服务的管理脚本。
+
+以默认配置启动swoole-task服务    
 
 ```sh
 php swoole-task.php start 
@@ -67,6 +73,7 @@ php swoole-task.php --app sw status
 
 ### 配置说明
 第一次使用 php swoole-task.php start 启动服务的时候，默认的业务逻辑编写目录是sw-app,和vendor在同级目录。
+
 自动生成如下目录结构
 
 ```
@@ -84,6 +91,7 @@ php swoole-task.php --app sw status
 ```
 
 默认配置文件说明
+
 app.php(没强迫症建议直接使用默认配置不必修改)
 
 ```
@@ -108,6 +116,7 @@ task_max_request 每个任务进程最多可处理请求数，超过重启，保
 ```
 
 ### swoole-task 服务启动流程说明
+
 初次运行swoole-task,执行php vendor/bin/swoole-task.php 命令，不添加任何参数，会执行如下初始化工作
 
 ```
@@ -116,6 +125,11 @@ task_max_request 每个任务进程最多可处理请求数，超过重启，保
 2 创建TplCtrl,TplDao 文件，写入到Ctrl/Dao 目录下，作为模板文件
 3 初始化配置文件app.php , http_server.php，写入到Conf目录下
 ```
-运行 php swoole-task.php 命令，不添加任何参数，会在项目根目录下检查是否存在sw-app 目录，如果不存在，执行初始化工作，如果存在，加载sw-app/Conf目录下的相关配置，启动服务。
+运行 php swoole-task.php 命令，不添加任何参数，会在项目根目录下检查是否存在sw-app 目录。
+
+如果不存在，执行初始化工作;
+
+如果存在，加载sw-app/Conf目录下的相关配置，启动服务。
+
 
 
