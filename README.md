@@ -20,7 +20,10 @@ swoole-task是基于PHP swoole扩展开发的一个异步多进程任务处理�
 
     
 ```sh
-composer require ping/swoole-task
+#由于某种不知名原因，访问 packagist太慢，可使用国内镜像
+#composer config repo.packagist composer https://packagist.phpcomposer.com
+composer require "ping/swoole-task:dev-master"
+
 ```
     
 > 如果项目根目录中不存在composer.json文件，需要执行composer init 命令。
